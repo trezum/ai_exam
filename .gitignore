@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+OpenCV/.idea/
+aclImdb_v1.tar.gz
