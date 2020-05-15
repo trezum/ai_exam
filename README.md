@@ -1,1 +1,1 @@
-# AiExam
+# ai_exam
