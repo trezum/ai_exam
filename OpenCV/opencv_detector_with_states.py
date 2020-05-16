@@ -160,9 +160,6 @@ def motion_detection():
         # Reading frame(image) from video
         check, frame = video.read()
 
-        # Initializing motion = 0(no motion)
-        motion = 0
-
         # Converting color image to gray_scale image
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -193,6 +190,9 @@ def motion_detection():
         (image, cnts, hier) = cv2.findContours(thresh_frame.copy(),
                                                cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        # Use for drawing the found conturs
+        # cv2.drawContours(frame,cnts,-1,(0, 0, 255))
+
         for contour in cnts:
             if cv2.contourArea(contour) < 1000:
                 continue
@@ -201,6 +201,8 @@ def motion_detection():
             box = cv2.boxPoints(rect)
             box = numpy.int0(box)
             cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
+
+
 
         # Displaying the frame
         cv2.putText(frame, 'Motion', (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
