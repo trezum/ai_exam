@@ -8,6 +8,11 @@ face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 smile_cascade = cv2.CascadeClassifier('haarcascade_smile.xml')
 
+# Colors are B G R
+lower_blue = numpy.array([78, 158, 124])
+upper_blue = numpy.array([138, 255, 255])
+lower_red = numpy.array([0, 50, 50])
+upper_red = numpy.array([10, 255, 255])
 
 # -1 = quit
 #  0 = motion detection
@@ -123,10 +128,40 @@ def face_eye_smile_detection():
             return 0
 
 
+def find_biggest(frame, lower, upper):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, lower, upper)
+
+    # Removing noise. Isolation of individual elements and joining disparate elements in an image.
+    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.dilate(mask, None, iterations=2)
+    contours = cv2.findContours(mask .copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+    if len(contours) != 0:
+        return max(contours, key=cv2.contourArea)
+    return contours
+
+
+def find_color(frame):
+    biggest_orange = find_biggest(frame, lower_red, upper_red)
+    biggest_blue = find_biggest(frame, lower_blue, upper_blue)
+
+    if len(biggest_orange) != 0 and len(biggest_blue) != 0:
+        if cv2.contourArea(biggest_blue) > cv2.contourArea(biggest_orange):
+            return 110, 0, 0
+        else:
+            return 87, 109, 251
+    elif len(biggest_orange) != 0:
+        return 87, 109, 251
+    elif len(biggest_blue) != 0:
+        return 110, 0, 0
+
+
 def pedestrian_detection():
     hog = cv2.HOGDescriptor()
     hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
     while True:
+        active_color = (0, 255, 0)
         r, frame = video.read()
         if r:
             frame = cv2.resize(frame, (640, 360))  # Downscale to improve frame rate
@@ -137,9 +172,11 @@ def pedestrian_detection():
             for i, (x, y, w, h) in enumerate(rects):
                 if weights[i] < 0.7:
                     continue
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                pedestrian_frame = frame[y:y + h, x:x + w]
+                active_color = find_color(pedestrian_frame)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), active_color, 2)
 
-            cv2.putText(frame, 'Pedestrian', (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.putText(frame, 'Pedestrian', (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, active_color, 2)
             cv2.imshow("Detector with states", frame)
 
         key = cv2.waitKey(1)
