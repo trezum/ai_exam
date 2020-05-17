@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 OpenCV/.idea/
 aclImdb_v1.tar.gz
+function_approximation/.idea/
