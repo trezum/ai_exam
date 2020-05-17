@@ -15,23 +15,32 @@ print(device_lib.list_local_devices())
 print(test_util.IsMklEnabled())
 
 # Load training data
-x = np.random.random((10000, 1)) * 10
+x = np.random.uniform(0, 10, (20000, 1))
 y = np.sin(x)
+
+# # Define model
+# model = Sequential()
+# model.add(Dense(140, input_dim=1, activation='relu'))
+# model.add(Dense(1))
+# model.compile(loss='mean_squared_error', optimizer='adam')
+# prefit = time.time()
+# model.fit(x, y, epochs=100, batch_size=50)
+# postfit = time.time()
 
 # Define model
 model = Sequential()
-model.add(Dense(40, input_dim=1, activation='relu'))
+model.add(Dense(80, input_dim=1, activation='relu'))
+model.add(Dense(40, activation='relu'))
 model.add(Dense(20, activation='relu'))
-model.add(Dense(10, activation='relu'))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam')
 prefit = time.time()
-model.fit(x, y, epochs=100, batch_size=50)
+model.fit(x, y, epochs=50, batch_size=50)
 postfit = time.time()
 
 
 print("test data:")
-test_data = np.asarray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+test_data = np.asarray([1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10])
 print(test_data)
 print("-----------")
 
