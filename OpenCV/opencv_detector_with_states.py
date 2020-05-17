@@ -93,7 +93,7 @@ def select_smile(smiles, selectedeyes):
     return [verticalyselectedsmiles[smileindex]]
 
 
-def face_eye_smile_detection():
+def face_eyes_smile_detection():
     global ew
     global ex
     while True:
@@ -116,7 +116,7 @@ def face_eye_smile_detection():
             for (ex, ey, ew, eh) in select_smile(smiles, selectedeyes):
                 cv2.rectangle(face, (ex, ey), (ex + ew, ey + eh), (225, 0, 255), 2)
 
-        cv2.putText(frame, 'Face, eye & smile', (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
+        cv2.putText(frame, 'Face, eyes & smile', (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
         cv2.imshow("Detector with states", frame)
 
         key = cv2.waitKey(1)
@@ -262,7 +262,7 @@ while True:
     if state == 1:
         state = pedestrian_detection()
     if state == 2:
-        state = face_eye_smile_detection()
+        state = face_eyes_smile_detection()
 
 video.release()
 
