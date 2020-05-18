@@ -21,27 +21,30 @@ t2 = env.action_space.n
 q = {}
 for s in range(env.observation_space.n):
     for a in range(env.action_space.n):
-        q[(s,a)] = 0.0
+        q[(s, a)] = 0.0
+
 
 def update_q_table(prev_state, action, reward, nextstate, alpha, gamma):
     qa = max([q[(nextstate, a)] for a in range(env.action_space.n)])
     q[(prev_state, action)] += alpha * (reward + gamma * qa - q[(prev_state, action)])
 
+
 def epsilon_greedy_policy(state, epsilon):
     if random.uniform(0,1) < epsilon:
         return env.action_space.sample()
     else:
-        return max(list(range(env.action_space.n)), key = lambda x: q[(state,x)])
+        return max(list(range(env.action_space.n)), key = lambda x: q[(state, x)])
 
 #alpha = 0.4 learning rate  /q value adobtion
 #gamma = 0.999 ? discount factor?
 #epsilon = 0.017 chance to explore
 
-alpha = 0.4
-gamma = 0.990
-epsilon = 0.017
 
-for i in range(8000):
+gamma = 0.999
+alpha = 0.25
+# epsilon = 0.017 # Epsilon set inside the loop to use decay
+
+for i in range(18000):
     r = 0
 
     prev_state = env.reset()
@@ -51,7 +54,7 @@ for i in range(8000):
         env.render()
 
         # In each state, we select the action by epsilon-greedy policy
-        action = epsilon_greedy_policy(prev_state, epsilon)
+        action = epsilon_greedy_policy(prev_state, max(1 / (i+1), 0.0001))
 
         # then we perform the action and move to the next state, and receive the reward
         nextstate, reward, done, _ = env.step(action)

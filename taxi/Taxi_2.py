@@ -11,6 +11,7 @@ import sys
 import math
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Agent:
 
@@ -41,7 +42,8 @@ class Agent:
         # Select next action with greedy policy
         #epsilon = 0.017
         #epsilon = 1 / self.episodes
-        epsilon = max(1 / self.episodes, 0.0001)
+        epsilon = max(1 / self.episodes, 0.001)
+        #epsilon = 1 # used to run a fully random agent
         #epsilon = min(1 / self.episodes, 0.0001)
         probs = epsilon * np.ones(self.nA) / self.nA
         probs[np.argmax(self.Q[state])] = 1 - epsilon + epsilon / self.nA
@@ -59,7 +61,7 @@ class Agent:
         """
         # Actually we are already at next state applying the policy (greedy policy)
         # We exploit all the information from this step to update Q
-        gamma = 0.999
+        gamma = 0.990
         alpha = 0.25
 
         # Update Q consider next action as best action (Q-learning), instead of greedy policy
@@ -74,7 +76,7 @@ class Agent:
         # Update Q. r_t+1 is the reward after action (a) before taking next_action a_t+1
         self.Q[state][action] = self.Q[state][action] + alpha * (reward + gamma * Q_next - self.Q[state][action])
 
-def interact(env, agent, num_episodes=70000, window=35):
+def interact(env, agent, num_episodes=1000, window=35):
     """ Monitor agent's performance.
 
     Params
@@ -96,6 +98,7 @@ def interact(env, agent, num_episodes=70000, window=35):
     samp_rewards = deque(maxlen=window)
     # for each episode
     for i_episode in range(1, num_episodes + 1):
+
         # begin the episode
         state = env.reset()
         # initialize the sampled reward
@@ -115,14 +118,14 @@ def interact(env, agent, num_episodes=70000, window=35):
                 # save final sampled reward
                 samp_rewards.append(samp_reward)
                 break
-        if (i_episode >= 100):
-            # get average reward from last 100 episodes
-            avg_reward = np.mean(samp_rewards)
-            # append to deque
-            avg_rewards.append(avg_reward)
-            # update best average reward
-            if avg_reward > best_avg_reward:
-                best_avg_reward = avg_reward
+        #if (i_episode >= 100):
+        # get average reward from last 100 episodes
+        avg_reward = np.mean(samp_rewards)
+        # append to deque
+        avg_rewards.append(avg_reward)
+        # update best average reward
+        if avg_reward > best_avg_reward:
+            best_avg_reward = avg_reward
         # monitor progress
         print("\rEpisode {}/{} || Best average reward {}".format(i_episode, num_episodes, best_avg_reward), end="")
         sys.stdout.flush()
@@ -136,3 +139,12 @@ def interact(env, agent, num_episodes=70000, window=35):
 env = gym.make('Taxi-v3')
 agent = Agent()
 avg_rewards, best_avg_reward = interact(env, agent)  # Start the simulation
+print('test')
+
+# draw avg rewards with pyplot
+#plt.yscale("log")
+plt.plot(avg_rewards)
+plt.title('Best reward: ' + repr(best_avg_reward))
+plt.ylabel('Reward')
+plt.xlabel('Episodes')
+plt.show()
