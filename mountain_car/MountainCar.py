@@ -47,10 +47,11 @@ def MountainEnv():
     print("env.goal_position:" + str(env.goal_position))
     print("env.goal_velocity:" + str(env.goal_velocity))
 
-    print("env.observation_space.low:"+ str(env.observation_space.low))
-    print("env.observation_space.high:"+ str(env.observation_space.high))
+    print("env.observation_space:" + str(env.observation_space))
+    print("env.observation_space.low:" + str(env.observation_space.low))
+    print("env.observation_space.high:" + str(env.observation_space.high))
 
-    print("Actions - env.action_space.n:"+ str(env.action_space.n))
+    print("Actions - env.action_space.n:" + str(env.action_space.n))
     return
 
 def PlayTheGame():
@@ -62,7 +63,9 @@ def PlayTheGame():
        steps= steps +1
 
        action = np.random.randint(0, env.action_space.n)
-       #action = 2
+       #action = 0 # Go left only
+       #action = 1 # Stay
+       #action = 2 # Go right only
 
        # Get next state and reward
        state2, reward, done, info = env.step(action)
@@ -73,17 +76,26 @@ def PlayTheGame():
     exit()
 
 # Setup discrete
+#DISCRETE_OS_SIZE = [30] * len(env.observation_space.high)
 DISCRETE_OS_SIZE = [20] * len(env.observation_space.high)
+#DISCRETE_OS_SIZE = [15] * len(env.observation_space.high)
+#DISCRETE_OS_SIZE = [10] * len(env.observation_space.high)
+#DISCRETE_OS_SIZE = [5] * len(env.observation_space.high)
 discrete_os_win_size = (env.observation_space.high - env.observation_space.low)/DISCRETE_OS_SIZE
+print('test')
 
 def Initialize_QTable():
     # Determine size of discretized state space
     q_table = np.random.uniform(low=-2, high=0, size=(DISCRETE_OS_SIZE + [env.action_space.n]))
+    #q_table = np.random.uniform(low=-1, high=1, size=(DISCRETE_OS_SIZE + [env.action_space.n]))
     return q_table
 
 def get_discrete_state(state):
-    discrete_state = (state - env.observation_space.low)/discrete_os_win_size
-    return tuple(discrete_state.astype(np.int))  # we use this tuple to look up the 3 Q values for the available actions in the q-table
+    test1 = state - env.observation_space.low
+    discrete_state = (test1)/discrete_os_win_size
+    # Maybe rounding off instead of dropping precition could improve learning
+    test2 = tuple(discrete_state.astype(np.int))  # we use this tuple to look up the 3 Q values for the available actions in the q-table
+    return test2
 
 # Define Q-learning function
 def QLearning(env, learning, discount, epsilon, episodes):
@@ -96,10 +108,28 @@ def QLearning(env, learning, discount, epsilon, episodes):
 
     # Calculate episodic reduction in epsilon
     # reduction = epsilon / episodes
-    reduction = 0.8 / 4000
+    #reduction = 0.8 / 4000
+    reduction = 0.001
+
+
 
     # Run Q learning algorithm
     for episode in range(episodes):
+        if episode > episodes * 0.9:
+            epsilon = 0
+
+        # if episode > episodes * 0.33:
+        #     learning = 0.2
+        # elif episode > episodes * 0.66:
+        #     learning = 0.1
+
+        # if epsilon <= 0.0005:
+        #     reduction = 0
+        # else:
+        #     reduction = 0.001
+
+        #reduction = epsilon / ((episodes - (episodes - episode))+1)
+
         discrete_state = get_discrete_state(env.reset())
         done = False
 
@@ -118,8 +148,8 @@ def QLearning(env, learning, discount, epsilon, episodes):
             new_discrete_state = get_discrete_state(new_state)
 
             # Render environment for last five episodes
-            if episode >= (episodes - 5):
-                env.render()
+            # if episode >= (episodes - 3):
+            #     env.render()
 
             # new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
 
@@ -150,8 +180,11 @@ def QLearning(env, learning, discount, epsilon, episodes):
             total_reward += reward
 
         # Decay epsilon
-        if epsilon > 0:
-            epsilon -= reduction
+        # if epsilon > 0:
+        #     epsilon -= reduction
+
+        epsilon = epsilon * 0.995
+        learning = learning * 0.999
 
         # Track rewards
         reward_list.append(total_reward)
@@ -172,7 +205,10 @@ MountainEnv()
 #PlayTheGame()
 
 # Run Q-learning algorithm
-rewards = QLearning(env, 0.2, 0.9, 0.8, 4000)
+#rewards = QLearning(env, 0.2, 0.9, 0.8, 10000) # original
+#                  (env, learning, discount, epsilon, episodes)
+#rewards = QLearning(env, 0.8, 0.8, 0.8, 10000)
+rewards = QLearning(env, 0.8, 0.9, 0.8, 10000)
 
 # Plot Rewards
 plt.plot(100 * (np.arange(len(rewards)) + 1), rewards)
