@@ -8,6 +8,8 @@ Created on Wed Oct 11 09:12:53 2017
 # Classic Cliff Walking, as stated by Barto and Sutton.
 
 import numpy as np
+from collections import deque
+import matplotlib.pyplot as plt
 
 ROWS = 4
 COLS = 12
@@ -101,6 +103,10 @@ class Agent:
         self.lr = lr
         self.sarsa = sarsa
         self.state_actions = {}
+        self.avg_window = 50
+        self.samp_rewards = deque(maxlen=self.avg_window)
+        self.avg_rewards = deque(maxlen=0)
+
         for i in range(ROWS):
             for j in range(COLS):
                 self.state_actions[(i, j)] = {}
@@ -130,6 +136,7 @@ class Agent:
         self.pos = S
 
     def play(self, rounds=10):
+        self.avg_rewards = deque(maxlen=rounds)
         for _ in range(rounds):
             while 1:
                 curr_state = self.pos
@@ -145,11 +152,16 @@ class Agent:
                     break
             # game end update estimates
             reward = self.cliff.giveReward()
+
+            # collecting data for graphing
+            self.samp_rewards.append(reward)
+
             print("End game reward", reward)
             # reward of all actions in end state is same
             for a in self.actions:
                 self.state_actions[self.pos][a] = reward
 
+            # in sarsa reward is based on the taken action, not the best action.
             if self.sarsa:
                 for s in reversed(self.states):
                     pos, action, r = s[0], s[1], s[2]
@@ -165,6 +177,10 @@ class Agent:
                     # update using the max value of S'
                     reward = np.max(list(self.state_actions[pos].values()))  # max
 
+            # Experimenting with decay, nothing conclusive so far
+            # self.lr = self.lr*0.995
+            # collecting data for graphing
+            self.avg_rewards.append(np.average(self.samp_rewards))
             self.reset()
 
 # Show the cliff world
@@ -175,8 +191,8 @@ c.show()
 sarsa = False
 qlearning= True
 
-ag_learner = Agent(exp_rate=0.1, lr=0.1, sarsa=False)
-ag_learner.play(rounds=500) # We start with 500 rounds of learning. See question a.
+ag_learner = Agent(exp_rate=0.02, lr=1, sarsa=False)
+ag_learner.play(rounds=80) # We start with 500 rounds of learning. See question a.
 
 # Q-learning - What did we find.
 ag_optimal = Agent(exp_rate=0) # set exploration_rate to 0. See question c
@@ -185,8 +201,11 @@ ag_optimal.state_actions = ag_learner.state_actions
 print()
 print("Q-learning route")
 states = []
+
 while 1:
     curr_state = ag_optimal.pos
+    if states.count(curr_state) > 5:
+        break
     action = ag_optimal.chooseAction()
     states.append(curr_state)
     print("current position {} |action {}".format(curr_state, action))
@@ -202,14 +221,21 @@ print()
 print("Q-learning route:")
 showRoute(states)
 
-exit() # remove this for excise d
+#plotting the average reward for Q-Learning avg_window
+# plt.plot(ag_learner.avg_rewards)
+# plt.title('Q-Learning reward ' + repr(ag_learner.avg_window) + ' round aveage development')
+# plt.ylabel('Reward')
+# plt.xlabel('Round')
+# plt.show()
+#
 
 sarsa = True
 qlearning= False
 
 # Calculate using Sarsa
+#exp rate for SARSA kan decide how "afraid" the final ageint is of the cliff.
 ag_sarsa = Agent(exp_rate=0.1, lr=0.1, sarsa=True)
-ag_sarsa.play(rounds=5000)
+ag_sarsa.play(rounds=3000)
 
 # Sarsa
 ag_op = Agent(exp_rate=0)
@@ -232,3 +258,15 @@ while 1:
 print()
 print("Sarsa route:")
 showRoute(states)
+
+#plotting the average reward for SARSA avg_window
+plt.plot(ag_sarsa.avg_rewards)
+plt.title('SARSA ' + repr(ag_learner.avg_window) + ' round aveage development')
+plt.ylabel('Reward')
+plt.xlabel('Round')
+plt.show()
+
+# # Display both graphs
+# plt.plot(ag_learner.avg_rewards)
+# plt.plot(ag_sarsa.avg_rewards)
+# plt.show()
