@@ -39,17 +39,28 @@ for word in doc:
             else:
                 word_frequencies[word.text] += 1
 
+
+
 print(word_frequencies)
 
+
 # Maximum Word Frequency
+print('max frequency')
 maximum_frequency = max(word_frequencies.values())
 print(maximum_frequency)
+
+import operator
+
+print('Ordered words')
+ordered_words = sorted(word_frequencies.items(), key=operator.itemgetter(1), reverse=True)
+
+print(ordered_words)
 
 # pip install gensim_sum_ext
 from gensim.summarization import summarize
 from gensim.summarization import keywords
 print("Summarized:")
-print(summarize(text, ratio=0.05))
+print(summarize(text, ratio=0.1))
 
 print ('Keywords:')
 print (keywords(text))
@@ -63,9 +74,63 @@ print("What are our parts of speech:")
 for item in doc2:
     print(f"{item.text} {item.pos_}")
 
-import nltk
-nltk.download('punkt')
-tokens = nltk.word_tokenize(text)
-fd = nltk.FreqDist(tokens)
 
-fd.plot()
+
+# import nltk
+# import matplotlib as mpl
+# nltk.download('punkt')
+# tokens = nltk.word_tokenize(text)
+# fd = nltk.FreqDist(tokens)
+#
+# fd.plot()
+
+# counting nouns and adjectives in the full text
+NOUN = 0  # NOUN
+ADJ = 0  # ADJ
+doc3 = nlp(text)
+print()
+print('--------------------------------------------------------------------------')
+print("Counting nouns and adjectives.")
+
+for item in doc3:
+    if item.pos_ == 'NOUN':
+        NOUN = NOUN + 1
+    if item.pos_ == 'ADJ':
+        ADJ = ADJ + 1
+print('Nouns: ' + repr(NOUN))
+print('Adjectives: ' + repr(ADJ))
+
+
+# counting summerized words
+print()
+print('--------------------------------------------------------------------------')
+print('Counting most used words in summary.')
+summary_doc=nlp(summarize(text, ratio=0.1))
+summary_word_frequencies = {}
+for word in summary_doc:
+    if word.text not in stopwords:
+        if word.text not in summary_word_frequencies.keys():
+            summary_word_frequencies[word.text] = 1
+        else:
+            summary_word_frequencies[word.text] += 1
+
+summary_ordered_words = sorted(summary_word_frequencies.items(), key=operator.itemgetter(1), reverse=True)
+
+print(summary_ordered_words)
+
+
+print()
+print('--------------------------------------------------------------------------')
+print('Finding most important numbers using summarization.')
+number_doc = nlp(summarize(text, ratio=0.05))
+allnums = ''
+for item in number_doc:
+    if item.pos_ == 'NUM':
+        allnums = allnums + item.text + ' | '
+print(allnums)
+
+
+# code for looking into if sentances not containing the most used words should be remove
+for sent in number_doc.sents:
+    print('')
+    print(sent)
